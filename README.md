@@ -1,46 +1,51 @@
-This repository contains a Display component for [ESPHome](https://esphome.io/)
+This repository contains a Display component for [ESPHome](https://esphome.io/) 2025.11+ 
 to support the ESP32-S3 [LILYGO T5 4.7" Plus E-paper display](https://www.lilygo.cc/products/t5-4-7-inch-e-paper-v2-3).
 
-(Do not confuse it with the original ESP32-based Lilygo T5 4.7 board.)
+**(Do not confuse it with the original ESP32-based Lilygo T5 4.7 board.)**
 
-For more info in the display components, see the [ESPHome display documentation](https://esphome.io/#display-components)
+For more info on the display components, see the [ESPHome display documentation](https://esphome.io/#display-components)
 
 ## Usage
-
-To use the board with [ESPHome](https://esphome.io/) **you have to put quite a
-number of options in your esphome config**:
-* Configure the aprpopriate board, variant, and framework versions in the
-[esp32 platform](https://esphome.io/components/esp32.html)
-* Set a bunch of `platformio_options`
-* Include the component from this repository as `external_components` 
-
-If you clone this repository, a working example is included:
-
-    git clone https://github.com/nickolay/esphome-lilygo-t547plus.git
-    cd esphome-lilygo-t547plus
-    esphome run basic.yaml
-
-If you don't want to clone, copy the necessary pieces from [basic.yaml](./basic.yaml)
-and adapt the `external_components` configuration as follows:
+To use the board with [ESPHome](https://esphome.io/), adjust your `.yaml` config:
 
 ```yaml
-# ... required esp32, platformio_options configuration omitted for brevity ...
+esphome:
+  name: lilygo
+  friendly_name: lilygo e-ink display
 
+  platformio_options:
+    # Unless noted otherwise, based on https://github.com/Xinyuan-LilyGO/LilyGo-EPD47/blob/1eb6119fc31fcff7a6bafecb09f4225313859fc5/examples/demo/platformio.ini#L37
+    upload_speed: 921600
+    monitor_speed: 115200
+    board_build.mcu: esp32s3
+    board_build.f_cpu: 240000000L
+    board_build.arduino.memory_type: qspi_opi
+    board_build.flash_size: 16MB
+    board_build.flash_mode: qio
+    board_build.flash_type: qspi
+    board_build.psram_type: opi
+    board_build.memory_type: qspi_opi
+    board_build.boot_freq: 80m
+    build_flags:
+      - "-DBOARD_HAS_PSRAM"
+
+  libraries:
+    - SPI
+      
 external_components:
-  - source: github://nickolay/esphome-lilygo-t547plus
+  - source: github://dabalroman/esphome-lilygo-t547plus
     components: ["t547"]
 
-## for those using ESPHome 2023.6.5 and earlier:
-# external_components:
-#   - source: github://nickolay/esphome-lilygo-t547plus@2023.6.5
-#     components: [t547]
-
-
 display:
-- platform: t547
-  id: t5_display
-  update_interval: 30s
+  - platform: t547
+    update_interval: 30s
+    lambda: |-
+      it.line(0, 0, 960, 540);
 ```
+
+EspHome will fetch the lib before compilation. If it fails, try `Clean build files` before using `Install`.
+
+This does not support z-lib compressed fonts.
 
 ## Discussion
 

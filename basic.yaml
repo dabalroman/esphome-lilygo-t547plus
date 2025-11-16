@@ -1,5 +1,7 @@
 esphome:
   name: lilygo
+  friendly_name: lilygo e-ink display
+
   platformio_options:
     # Unless noted otherwise, based on https://github.com/Xinyuan-LilyGO/LilyGo-EPD47/blob/1eb6119fc31fcff7a6bafecb09f4225313859fc5/examples/demo/platformio.ini#L37
     upload_speed: 921600
@@ -13,47 +15,48 @@ esphome:
     board_build.psram_type: opi
     board_build.memory_type: qspi_opi
     board_build.boot_freq: 80m
-    platform_packages:
-      - "toolchain-riscv32-esp @8.4.0+2021r2-patch5"
-    build_flags:  # the first three defines are required for the screen library to function.
+    build_flags:
       - "-DBOARD_HAS_PSRAM"
-      - "-DARDUINO_RUNNING_CORE=0"  # TODO: this conflicts with the value from platformio's idedata, spewing a lot of warnings during the build.
-      - "-DARDUINO_EVENT_RUNNING_CORE=0"  # and this too
-      # In addition to lilygo's settings:
-      # To enable reading logs over USB until `hardware_uart: USB_CDC` support
-      # is added to `logger:`, as detailed in <https://github.com/esphome/feature-requests/issues/1906>:
-      - "-DARDUINO_USB_MODE=1"
-      - "-DARDUINO_USB_CDC_ON_BOOT=1"
+
+  libraries:
+    - SPI
 
 esp32:
   variant: esp32s3
   board: esp32-s3-devkitc-1
 
   framework:
-    type: arduino
-    # Just like in <https://community.home-assistant.io/t/enable-usb-cdc-to-log-hello-world-to-esp32-s3-dev-board-for-esphome/463164/10>
-    # I had problems with newer versions; the following combination happens to work, so using it for now.
-    version: 2.0.3
-    platform_version: 5.1.1
+    type: arduino # Needed for display's platform and lambda to work
 
+# Enable logging
 logger:
   level: VERBOSE
-  # hardware_uart: USB_CDC  # see note about <https://github.com/esphome/feature-requests/issues/1906> above
 
 # Enable Home Assistant API
-api:  # Set up a key instead: https://community.home-assistant.io/t/2023-2-esphome-deprecated-api-password-how-to-update-to-encryption-key
-  password: !secret api_ota_password
+api:
+  encryption:
+    key: "3lOPTl7UR0o3VsoD14h7Lnpd2Mvravq9TlKqcLhNrVc=" # example key
 
 ota:
-  platform: esphome
-  password: !secret api_ota_password
+  - platform: esphome
+    password: "ab46d04dc5fe3047cf3061e272a59123" # example password
 
-wifi: !include wifi-secrets.yaml
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Example Fallback Hotspot"
+    password: "M4bS2vSbHR93"
+
+captive_portal:
+
 
 binary_sensor:
   - platform: gpio
-    pin: 
-      number: GPIO21 #was GPIO39 on the previous board
+    pin:
+      number: GPIO21
       inverted: true
     name: "Button 1"
     on_press:

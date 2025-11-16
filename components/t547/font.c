@@ -4,7 +4,6 @@
 /******************************************************************************/
 
 #include "epd_driver.h"
-#include "zlib/zlib.h"
 
 #include <esp_assert.h>
 #include <esp_heap_caps.h>
@@ -374,16 +373,7 @@ static void IRAM_ATTR draw_char(const GFXfont *font,
 
     int32_t byte_width = (width / 2 + width % 2);
     unsigned long bitmap_size = byte_width * height;
-    uint8_t *bitmap = NULL;
-    if (font->compressed)
-    {
-        bitmap = (uint8_t *)malloc(bitmap_size);
-        uncompress(bitmap, &bitmap_size, &font->bitmap[offset], glyph->compressed_size);
-    }
-    else
-    {
-        bitmap = &font->bitmap[offset];
-    }
+    uint8_t *bitmap = &font->bitmap[offset];
 
     uint8_t color_lut[16];
     for (int32_t c = 0; c < 16; c++)
@@ -429,10 +419,7 @@ static void IRAM_ATTR draw_char(const GFXfont *font,
             x++;
         }
     }
-    if (font->compressed)
-    {
-        free(bitmap);
-    }
+
     *cursor_x += glyph->advance_x;
 }
 

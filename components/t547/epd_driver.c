@@ -17,6 +17,7 @@
 #include <xtensa/core-macros.h>
 
 #include <string.h>
+#include <math.h>
 
 /******************************************************************************/
 /***        macro definitions                                               ***/
