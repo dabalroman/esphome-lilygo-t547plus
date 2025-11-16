@@ -5,6 +5,13 @@ to support the ESP32-S3 [LILYGO T5 4.7" Plus E-paper display](https://www.lilygo
 
 For more info on the display components, see the [ESPHome display documentation](https://esphome.io/#display-components)
 
+I confirmed it works with esphome 2025.10.5 with the following components:
+- time
+- binary_sensor (homeassistant, gpio)
+- text_sensor (homeassistant)
+- online_image
+- font
+
 ## Usage
 To use the board with [ESPHome](https://esphome.io/), adjust your `.yaml` config:
 ```yaml
