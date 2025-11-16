@@ -34,7 +34,7 @@ esphome:
       
 external_components:
   - source: github://dabalroman/esphome-lilygo-t547plus_esphome-2025.11
-components: ["t547"]
+    components: ["t547"]
 
 display:
   - platform: t547
