@@ -13,8 +13,17 @@ static const char *const TAG = "t574";
 
 void T547::setup() {
   ESP_LOGV(TAG, "Initialize called");
+  
+  // Log memory before initialization
+  ESP_LOGI(TAG, "=== Memory Before Display Init ===");
+  ESP_LOGI(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+  ESP_LOGI(TAG, "Free PSRAM: %d bytes", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+  ESP_LOGI(TAG, "Total PSRAM: %d bytes", heap_caps_get_total_size(MALLOC_CAP_SPIRAM));
+  ESP_LOGI(TAG, "Largest free PSRAM block: %d bytes", heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+  
   epd_init();
   uint32_t buffer_size = this->get_buffer_length_();
+  ESP_LOGI(TAG, "Required buffer size: %d bytes (%.2f KB)", buffer_size, buffer_size / 1024.0);
 
   if (this->buffer_ != nullptr) {
     free(this->buffer_);  // NOLINT
@@ -24,11 +33,25 @@ void T547::setup() {
 
   if (this->buffer_ == nullptr) {
     ESP_LOGE(TAG, "Could not allocate buffer for display!");
-    this->mark_failed();
-    return;
+    ESP_LOGE(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    ESP_LOGE(TAG, "Free PSRAM: %d bytes", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+    ESP_LOGE(TAG, "Largest free PSRAM block: %d bytes", heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    
+    // Try regular heap_caps_malloc as fallback
+    ESP_LOGW(TAG, "Trying fallback allocation with heap_caps_malloc...");
+    this->buffer_ = (uint8_t *) heap_caps_malloc(buffer_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    
+    if (this->buffer_ == nullptr) {
+      ESP_LOGE(TAG, "Fallback allocation also failed!");
+      this->mark_failed();
+      return;
+    } else {
+      ESP_LOGI(TAG, "Fallback allocation succeeded!");
+    }
   }
 
   memset(this->buffer_, 0xFF, buffer_size);
+  ESP_LOGI(TAG, "Buffer allocated successfully at address: %p", this->buffer_);
   ESP_LOGV(TAG, "Initialize complete");
 }
 
