@@ -5,6 +5,15 @@ to support the ESP32-S3 [LILYGO T5 4.7" Plus E-paper display](https://www.lilygo
 
 For more info on the display components, see the [ESPHome display documentation](https://esphome.io/#display-components)
 
+## ESP-IDF 5.4.2+ Compatibility
+
+**Important:** This version includes fixes for ESP-IDF 5.4.2+ compatibility. See [FIXES.md](FIXES.md) for details.
+
+Key fixes:
+- RMT driver migrated to new API (fixes boot crashes)
+- LCD i80 bus requires explicit clock source
+- **PSRAM must be initialized via `sdkconfig_options`** (required for display buffer)
+
 I confirmed it works with esphome 2025.10.5 with the following components:
 - time
 - binary_sensor (homeassistant, gpio)
@@ -23,6 +32,8 @@ external_components:
 ## Full example
 Make note how `platformio_options`, `libraries` and `esp32` are set up, these are important for the compilation stage.
 
+**Important for ESP-IDF 5.4.2+:** You must add `sdkconfig_options` to enable PSRAM initialization.
+
 ```yaml
 esphome:
   name: lilygo
@@ -35,7 +46,7 @@ esphome:
     board_build.mcu: esp32s3
     board_build.f_cpu: 240000000L
     board_build.arduino.memory_type: qspi_opi
-    board_build.flash_size: 16MB
+    board_build.flash_size: 4MB
     board_build.flash_mode: qio
     board_build.flash_type: qspi
     board_build.psram_type: opi
@@ -43,6 +54,8 @@ esphome:
     board_build.boot_freq: 80m
     build_flags:
       - "-DBOARD_HAS_PSRAM"
+      - "-DARDUINO_USB_CDC_ON_BOOT=1"
+      - "-mfix-esp32-psram-cache-issue"
 
   libraries:
     - SPI
@@ -51,6 +64,17 @@ esp32:
   board: esp32-s3-devkitc-1
   framework:
     type: arduino
+    # CRITICAL for ESP-IDF 5.4.2+: Enable PSRAM initialization
+    sdkconfig_options:
+      CONFIG_SPIRAM: "y"
+      CONFIG_SPIRAM_MODE_OCT: "y"
+      CONFIG_SPIRAM_SPEED_80M: "y"
+      CONFIG_SPIRAM_USE_MALLOC: "y"
+      CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL: "16384"
+      CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP: "y"
+      CONFIG_ESP32S3_SPIRAM_SUPPORT: "y"
+      CONFIG_SPIRAM_BOOT_INIT: "y"
+      CONFIG_SPIRAM_IGNORE_NOTFOUND: "n"
 
 # Enable logging
 logger:
